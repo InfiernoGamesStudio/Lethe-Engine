@@ -1,0 +1,71 @@
+Léthé Texture format
+
+This file contain specification for Léthé texture format,
+Léthé engine use custom texture file; this file describe
+how the format works; see the end of the file for details
+about format revisions.
+
+This file is provide as a helper to understand the format,
+no information about the huffman algorithm or any other
+algorithm implementation was provide; the information
+provide here was just a study case.
+
+Basicly Léthé texture files as the extension ltf; but
+like any other format; extension don't defined the
+file content, just a visual help to tell file usage.
+
+The Léthé texture file was compose of two main section,
+the file header and content; the file header was compose
+of seven blocs and file content was split on equal blocs.
+
+File header structure :
+  | bloc name | bloc size | bloc use
+  |-----------|-----------|---------------------------|
+  |    TGI    |     1     | Store generator id        |
+  |    TWI    |     4     | Store texture width       |
+  |    THI    |     4     | Store texture height      |
+  |    TSI    |     4     | Store texture size        |
+  |    BLI    |     2     | Store content blob length |
+  |    BCI    |     4     | Srote content blob count  |
+  |    HSI    |     4     | Store HTI size            |
+  |    HTI    |   [HSI]   | Store huffman tree        |
+  |-----------|-----------|---------------------------|
+
+  For TGI equal to 0x10, the header was not compressed,
+  for other TGI look under for details about header
+  compression.
+
+  The TSI value is equal to TWI * THI * 4; the constant
+  4 is used to defined the 4 channels of RGBA pixels.
+
+  The BLI value defined the size for blob data of the
+  content blocs.
+
+  The BCI value is equal to TSI / BLI; if BCI * BLI is
+  not equal to TSI; the last bloc of content section
+  was not entirely used.
+
+File content bloc strucuture :
+  | bloc name | bloc size | bloc use
+  |-----------|-----------|------------------------|
+  |    CSI    |     4     | Store blob start info. |
+  |    CDI    |   [BLI]   | Store blob data        |
+  |    CEI    |     4     | Store blob end info.   |
+  |-----------|-----------|------------------------|
+
+  For TGI equal to 0x10, the content was just a blob
+  of compressed data; no chunk or sum to ensure the
+  data viability.
+
+  From TGI equal 0x11 to 0x?? :
+    - CSI is equal to the check sum value for the blob.
+    - CEI is equal to CSI; CEI is used for redundancy;
+      if CSI and CEI not equal or the check sum of the
+      blob not equal to CSI; the blob was aletred and
+      not usable.
+
+Format revision history:
+    1.1 : ( 2018-??-?? ) Update file strucuture :
+                  - Add data to the header.
+                  - Add blob support for content bloc.
+    1.0 : ( 2018-11-03 ) First version of the format.
